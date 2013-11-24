@@ -8,9 +8,9 @@ import numpy as np
 
 def getZValFromImage(z_case = False, r = None, g = None, b = None):
     if (z_case == False):
-        return 0
+        return 1
     else:
-        return (r + b + g)/3.0
+        return ((r + b + g) * 255)/3.0
     
 #Extracts vertices from an image and saves it in a file usable by out plotting tool
 def fromImage(file_path, gen_z = False):
@@ -21,11 +21,11 @@ def fromImage(file_path, gen_z = False):
     vertices = ""
     for x in xrange(0, len(img_data)):
         for y in xrange(0, len(img_data[x])):
-            r = img_data[x][y][0]
-            g = img_data[x][y][1]
-            b = img_data[x][y][2]
+            r = img_data[x][y][0]/255.0
+            g = img_data[x][y][1]/255.0
+            b = img_data[x][y][2]/255.0
             #generate a z value
-            z = getZValFromImage(gen_z)
+            z = getZValFromImage(gen_z, r, g, b)
             vertices += str(x) + "," + str(y) + "," + str(z)  + "," + str(r) + "," + str(g) + "," + str(b) + "\n"
     
     out_path = file_path.split('/')[-1].split('.')[0]
@@ -35,4 +35,4 @@ def fromImage(file_path, gen_z = False):
     out_file.close()
     
 if __name__ == "__main__":
-    fromImage('images/tommy.jpg', False)
+    fromImage('images/tommy.jpg', True)

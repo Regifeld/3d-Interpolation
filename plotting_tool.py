@@ -31,7 +31,7 @@ class Window(pyglet.window.Window):
                                   forward_compatible = True)
 
         super(Window, self).__init__(caption ="Plotting Tool",
-                                     width = 1000, height = 1000, 
+                                     width = 600, height = 600, 
                                      resizable = True,
                                      config = config)
         
@@ -41,43 +41,45 @@ class Window(pyglet.window.Window):
         self.numIndices = 0
         #Used to store list of vertices from original data file
         self.vertices = None
-        self.parseData('data/tommy.data')
+        #self.parseData('data/tiny_g500.data')
+        self.parseData('data/tiny_g500.data')
         
         ####################################################################################
         #----------TO BE CHANGED----------
         #store initial screen values
-        x_max = 300.0
+        x_max = 250
         x_min = 0
-        y_max = 450.0
+        y_max = 250
         y_min = 0
-        z_max = 5.0 #near
-        z_min = -5.0 #far
+        z_max = 255.0 #near
+        z_min = -255.0 #far
         #Same as viewer location (p_0)
         e_x = 0
         e_y = 0
-        e_z = 10
-
-        #double check this transform
-        world_cameraTransform = np.array([[1, 0, 0, 0], 
+        e_z = 255
+        
+        self.local_to_world = np.array([[1, 0, 0, 0], 
                                           [0, 1, 0, 0], 
                                           [0, 0, 1, 0], 
                                           [0, 0, 0, 1]])
-        trans_eyeTransform = np.array([[1, 0, 0, -e_x], 
+
+        #double check this transform
+        self.world_to_camera = np.array([[1, 0, 0, 0], 
+                                          [0, 1, 0, 0], 
+                                          [0, 0, 1, 0], 
+                                          [0, 0, 0, 1]])
+        
+        self.eye_transform = np.array([[1, 0, 0, -e_x], 
                                        [0, 1, 0, -e_y], 
                                        [0, 0, 1, -e_z], 
                                        [0, 0, 0, 1]])
-        #calculate the model view transform
-        self.modelViewTransform = np.dot(world_cameraTransform, trans_eyeTransform)
+
         
         self.p_ortho = np.array([[2/(x_max - x_min), 0, 0, -(x_max + x_min)/(x_max - x_min)], 
                                  [0, 2/(y_max - y_min), 0, -(y_max + y_min)/(y_max - y_min)],
                                  [0, 0, -2/(z_min - z_max), -(z_min + z_max)/(z_min - z_max)], 
                                  [0, 0, 0, 1]])
         
-        self.p_perspective = np.array([[(2 * z_max)/(x_max - x_min), 0,                          -(x_max + x_min)/(x_max - x_min), 0],
-                                       [0,                          (2 * z_max)/(y_max - y_min), -(y_max + y_min)/(y_max - y_min), 0],
-                                       [0,                          0,                           -(z_min + z_max)/(z_min - z_max), -(2 * z_min * z_max)/(z_min - z_max)],
-                                       [0,                          0,                           -1,                               0]])
         
         self.transform = np.array([[1, 0, 0, 0],
                                    [0, 1, 0, 0],
@@ -101,9 +103,7 @@ class Window(pyglet.window.Window):
         vertices = []
         indices = []
         #self.vertices = []
-        hs = 0.5 #stores half of length of side
         with open(data_file, 'r') as f:
-            i = 0
             for line in f:
                 vertex = str(line).replace('\n', '').split(',')
                 #Create 4 vertices from single input vertex (create a square)
@@ -113,29 +113,58 @@ class Window(pyglet.window.Window):
                 r = float(vertex[3])
                 g = float(vertex[4])
                 b = float(vertex[5])
-                index = i * 5
-                #TRIANGLE 1
-                vertices.append([x - hs, y + hs, z, r, g, b])
-                indices.append(index + 0)
-                vertices.append([x - hs, y - hs, z, r, g, b])
-                indices.append(index + 1)
-                vertices.append([x + hs, y + hs, z, r, g, b])
-                indices.append(index + 2)
-                #TRIANGLE 2
-                vertices.append([x + hs, y - hs, z, r, g, b])
-                indices.append(index + 3)
-                indices.append(index + 2) #Reuse indices
-                indices.append(index + 1)
-                i += 1
+                d = 0.5
+                #Add generated vertices from point
+                #top face
+                vertices.append([x - d, y - d, z + d, r, g, b])
+                p0 = len(vertices) - 1
+                vertices.append([x + d, y - d, z + d, r, g, b])
+                p1 = len(vertices) - 1
+                vertices.append([x + d, y + d, z + d, r, g, b])
+                p2 = len(vertices) - 1
+                vertices.append([x - d, y + d, z + d, r, g, b])
+                p3 = len(vertices) - 1
+                #bottom face
+                vertices.append([x - d, y - d, z - d, r, g, b])
+                p4 = len(vertices) - 1
+                vertices.append([x + d, y - d, z - d, r, g, b])
+                p5 = len(vertices) - 1
+                vertices.append([x + d, y + d, z - d, r, g, b])
+                p6 = len(vertices) - 1
+                vertices.append([x - d, y + d, z - d, r, g, b])
+                p7 = len(vertices) - 1
+                #index the geometry (USE WHEN USING TRIANGLES)
+                #FRONT FACE
+                indices.append([p0, p1, p3])
+                indices.append([p2, p3, p1])
+                #BACK FACE
+                indices.append([p4, p5, p7])
+                indices.append([p6, p7, p5])
+                #TOP FACE
+                indices.append([p3, p7, p2])
+                indices.append([p6, p2, p7])
+                #BOTTOM FACE
+                indices.append([p0, p4, p1])
+                indices.append([p5, p1, p4])
+                #RIGHT FACE
+                indices.append([p1, p5, p2])
+                indices.append([p6, p2, p5])
+                #LEFT FACE
+                indices.append([p7, p4, p3])
+                indices.append([p0, p3, p4])
+                #USE WHEN USING POINTS
+#                vertices.append([x, y, z, r, g, b])
+#                indices.append(len(vertices) - 1)
+
         #Build vertices array          
         vertices = np.array(vertices).flatten()
         self.vertexData = (GLfloat * vertices.size)()
         for i in xrange(0, vertices.size):
             self.vertexData[i] = vertices[i]
         #Build indices array 
-        indices = np.array(indices)
+        indices = np.array(indices).flatten()
         self.numIndices = indices.size
-        self.triIndices = (GLshort * indices.size)()
+        self.triIndices = (GLuint * indices.size)()
         for i in xrange(0, indices.size):
             self.triIndices[i] = indices[i]
     
@@ -277,20 +306,21 @@ class Window(pyglet.window.Window):
     def on_draw(self):
         # Handles glClear calls
         self.clear()
-        # TODO: Render your geometry. Update any uniforms (e.g., colors,
-        # matrices) you may need.
-        #apply local modelViewTransform to local transforms
-        mvpMatrix = np.dot(self.modelViewTransform, self.transform)
+        #BUILD MV Matrix
+        mvMatrix = np.dot(self.local_to_world, self.transform)
+        mvMatrix = np.dot(self.world_to_camera, mvMatrix)
+        mvMatrix = np.dot(self.eye_transform, mvMatrix)
+        
         #apply ortho perspective matrix to model view matrix
-        mvpMatrix = np.dot(self.p_ortho, mvpMatrix)
-        mvpMatrix = mvpMatrix.transpose()
+        mvpMatrix = np.dot(self.p_ortho, mvMatrix)
+        mvpMatrix = mvpMatrix.transpose()        
         mvpTransform = (GLfloat * 16)()
         #Janky way to build our matrix
         for i in xrange(0, 16):
             mvpTransform[i] = mvpMatrix.flatten()[i]
            
         glUniformMatrix4fv(self.mvpTransformLoc, 1, GL_FALSE, *([mvpTransform]))
-        glDrawElements(GL_TRIANGLES, self.numIndices, GL_UNSIGNED_SHORT, None)
+        glDrawElements(GL_TRIANGLES, self.numIndices, GL_UNSIGNED_INT, None)
 
 
     def on_key_release(self, keycode, modifiers):
