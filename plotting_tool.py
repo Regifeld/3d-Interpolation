@@ -42,14 +42,25 @@ class Window(pyglet.window.Window):
         #Used to store list of vertices from original data file
         self.vertices = None
         #self.parseData('data/tiny_g500.data')
-        self.parseData('data/tiny_g500.data')
+        self.parseData('data/tommy.data')
         
         ####################################################################################
-        #----------TO BE CHANGED----------
+        #----------TO BE CHANGED----------.
+        self.screen_width = 600.0
+        self.screen_height = 600.0
+        self.aspect = float(self.screen_width)/self.screen_height
+        near = 0.1
+        far = 100.0
         #store initial screen values
-        x_max = 250
+        #Galaxy values
+#        x_max = 220
+#        x_min = 0
+#        y_max = 220
+#        y_min = 0
+        #Tommy values
+        x_max = 300
         x_min = 0
-        y_max = 250
+        y_max = 400
         y_min = 0
         z_max = 255.0 #near
         z_min = -255.0 #far
@@ -58,11 +69,17 @@ class Window(pyglet.window.Window):
         e_y = 0
         e_z = 255
         
+        
+        
         self.local_to_world = np.array([[1, 0, 0, 0], 
                                           [0, 1, 0, 0], 
                                           [0, 0, 1, 0], 
                                           [0, 0, 0, 1]])
-
+        
+        #rotate obj locally by 90 degrees
+        self.local_to_world = np.dot(self.translate(x = 0, y = 400, z = 0), self.rot_z(270))
+        #self.local_to_world = np.dot(self.local_to_world, )
+        
         #double check this transform
         self.world_to_camera = np.array([[1, 0, 0, 0], 
                                           [0, 1, 0, 0], 
@@ -79,7 +96,12 @@ class Window(pyglet.window.Window):
                                  [0, 2/(y_max - y_min), 0, -(y_max + y_min)/(y_max - y_min)],
                                  [0, 0, -2/(z_min - z_max), -(z_min + z_max)/(z_min - z_max)], 
                                  [0, 0, 0, 1]])
-        
+#        self.p_ortho = np.array([[far/self.aspect, 0, 0, 0],
+#                               [0, far, 0, 0],
+#                               [0, 0, (far + near)/(near - far), (2*far*near)/(near - far)],
+#                               [0, 0, -1, 0]])
+                
+
         
         self.transform = np.array([[1, 0, 0, 0],
                                    [0, 1, 0, 0],
@@ -88,7 +110,7 @@ class Window(pyglet.window.Window):
         ####################################################################################
            
         # Initialize GL state: Enable depth testing
-        glClearColor(1, 1, 1, 1)
+        glClearColor(0, 0, 0, 0)
         glEnable(GL_DEPTH_TEST)
 
         # Initialize OpenGL data         
@@ -310,6 +332,9 @@ class Window(pyglet.window.Window):
         mvMatrix = np.dot(self.local_to_world, self.transform)
         mvMatrix = np.dot(self.world_to_camera, mvMatrix)
         mvMatrix = np.dot(self.eye_transform, mvMatrix)
+#        mvMatrix = np.dot(self.world_to_camera, self.local_to_world)
+#        mvMatrix = np.dot(self.eye_transform, mvMatrix)
+#        mvMatrix = np.dot(self.transform, mvMatrix)        
         
         #apply ortho perspective matrix to model view matrix
         mvpMatrix = np.dot(self.p_ortho, mvMatrix)
@@ -322,61 +347,66 @@ class Window(pyglet.window.Window):
         glUniformMatrix4fv(self.mvpTransformLoc, 1, GL_FALSE, *([mvpTransform]))
         glDrawElements(GL_TRIANGLES, self.numIndices, GL_UNSIGNED_INT, None)
 
-
+    
+    def rot_x(self, theta = 10):
+            #Rotate about the local x axis
+            theta = math.radians(theta)
+            rotate = np.array([[1, 0, 0, 0], 
+                               [0, math.cos(theta), -math.sin(theta), 0], 
+                               [0, math.sin(theta), math.cos(theta), 0], 
+                               [0, 0, 0, 1]])
+            return rotate
+            #self.transform = np.dot(self.transform, rotate)
+            
+    def rot_y(self, theta = 10):
+            theta = math.radians(theta)
+            rotate = np.array([[math.cos(theta), 0, math.sin(theta), 0], 
+                               [0, 1, 0, 0], 
+                               [-math.sin(theta), 0, math.cos(theta), 0], 
+                               [0, 0, 0, 1]])
+            return rotate
+            
+    def rot_z(self, theta = 10):
+            theta = math.radians(theta)
+            #rotate on local z axis
+            rotate = np.array([[math.cos(theta), -math.sin(theta), 0, 0], 
+                               [math.sin(theta), math.cos(theta), 0, 0], 
+                               [0, 0, 1, 0], 
+                               [0, 0, 0, 1]])
+            return rotate
+            
+    def translate(self, x = 0, y = 0, z = 0):
+            translate = np.array([[1, 0, 0, x], 
+                                  [0, 1, 0, y], 
+                                  [0, 0, 1, z], 
+                                  [0, 0, 0, 1]])
+            return translate
+            
+    def reset(self):
+        # reset transformation matrix to identity matrix
+        self.transform = np.array([[1, 0, 0, 0], 
+                                   [0, 1, 0, 0], 
+                                   [0, 0, 1, 0], 
+                                   [0, 0, 0, 1]])
     def on_key_release(self, keycode, modifiers):
-        if keycode == key.RIGHT:
-            # TODO: Turn car right
-            theta = 10
-            theta = math.radians(theta)
-            #rotate right on local z axis
-            rotate = np.array([[math.cos(theta), -math.sin(theta), 0, 0], 
-                               [math.sin(theta), math.cos(theta), 0, 0], 
-                               [0, 0, 1, 0], 
-                               [0, 0, 0, 1]])
-            self.transform = np.dot(self.transform, rotate)
-            # multiply current_transform * rotation_transform            
+        
+        if keycode == key.BRACKETLEFT:
+            self.transform = np.dot(self.transform, self.rot_z(-5))
+        elif keycode == key.BRACKETRIGHT:
+            self.transform = np.dot(self.transform, self.rot_z(5))
+        elif keycode == key.RIGHT:
+            self.transform = np.dot(self.transform, self.rot_y(5))
         elif keycode == key.LEFT:
-            # TODO: Turn car left
-            theta = -10
-            theta = math.radians(theta)
-            #rotate right on local z axis
-            rotate = np.array([[math.cos(theta), -math.sin(theta), 0, 0], 
-                               [math.sin(theta), math.cos(theta), 0, 0], 
-                               [0, 0, 1, 0], 
-                               [0, 0, 0, 1]])
-            self.transform = np.dot(self.transform, rotate)                        
+            self.transform = np.dot(self.transform, self.rot_y(-5))
         elif keycode == key.UP:
-            # TODO: Move forward 
-            # multiply current_transform * translation_transform
-            x = 0
-            y = -10
-            z = 0
-            translate = np.array([[1, 0, 0, x], 
-                                  [0, 1, 0, y], 
-                                  [0, 0, 1, z], 
-                                  [0, 0, 0, 1]])
-            self.transform = np.dot(self.transform, translate)
+            self.transform = np.dot(self.transform, self.rot_x(5))
         elif keycode == key.DOWN:
-            # TODO: Move backwards
-            x = 0
-            y = 10
-            z = 0
-            translate = np.array([[1, 0, 0, x], 
-                                  [0, 1, 0, y], 
-                                  [0, 0, 1, z], 
-                                  [0, 0, 0, 1]])
-            # multiply current_transform * translation_transform
-            self.transform = np.dot(self.transform, translate)
+            self.transform = np.dot(self.transform, self.rot_x(-5))
         elif keycode == key.H:
-            # TODO: Reset model transformations
-            # reset transformation matrix to identity matrix
-            self.transform = np.array([[1, 0, 0, 0], 
-                                       [0, 1, 0, 0], 
-                                       [0, 0, 1, 0], 
-                                       [0, 0, 0, 1]])
+            self.reset()
         elif keycode == key.B:
             #scale
-            s = 2
+            s = 1.1
             scale = np.array([[s, 0, 0, 0], 
                               [0, s, 0, 0],
                               [0, 0, s, 0], 
@@ -385,7 +415,7 @@ class Window(pyglet.window.Window):
         elif keycode == key.Y:
             x = 1
             z = 1
-            shear = self.transform = np.array([[1, x, 0, 0], 
+            shear = np.array([[1, x, 0, 0], 
                                                [0, 1, 0, 0], 
                                                [0, z, 1, 0], 
                                                [0, 0, 0, 1]])
@@ -393,7 +423,7 @@ class Window(pyglet.window.Window):
         elif keycode == key.X:
             y = 1
             z = 1
-            shear = self.transform = np.array([[1, 0, 0, 0], 
+            shear =  np.array([[1, 0, 0, 0], 
                                                [y, 1, 0, 0], 
                                                [z, 0, 1, 0], 
                                                [0, 0, 0, 1]])
@@ -401,12 +431,16 @@ class Window(pyglet.window.Window):
         elif keycode == key.Z:
             x = 1
             y = 1
-            shear = self.transform = np.array([[1, 0, x, 0], 
+            shear = np.array([[1, 0, x, 0], 
                                                [0, 1, y, 0], 
                                                [0, 0, 1, 0], 
                                                [0, 0, 0, 1]])
             self.transform = np.dot(self.transform, shear)
         # Always redraw after keypress
+        elif keycode == key.W:
+            #rotate about local x axis
+            self.transform = np.dot(self.transform, self.translate(0, 0, 10))
+            
         self.on_draw()
     
 # Run the actual application

@@ -16,8 +16,9 @@ def getZValFromImage(z_case = False, r = None, g = None, b = None):
 def fromImage(file_path, gen_z = False):
     #Open file using PIL
     img = Image.open(file_path)
+    img.show()
     #Grab pixel data from image and load into numpy array
-    img_data = np.array(img.getdata()).reshape(img.size[0], img.size[1], 3)
+    img_data = np.asarray(img)
     vertices = ""
     for x in xrange(0, len(img_data)):
         for y in xrange(0, len(img_data[x])):
@@ -33,6 +34,9 @@ def fromImage(file_path, gen_z = False):
     out_file = open(out_path, 'w')
     out_file.write(vertices)
     out_file.close()
+    
+    image = Image.fromarray(img_data, 'RGB')
+    image.show('Test')
     
 if __name__ == "__main__":
     fromImage('images/tommy.jpg', True)
