@@ -42,7 +42,9 @@ class Window(pyglet.window.Window):
         #Used to store list of vertices from original data file
         self.vertices = None
         #self.parseData('data/tiny_g500.data')
-        self.parseData('data/tommy.data')
+        #self.parseData('data/tiny_g500.data', mode = 'POINT_CLOUD')
+        #self.parseData('data/tiny_g500.npy', mode = 'TRIANGLE_MESH')
+        self.parseData('data/tommy.npy', mode = 'TRIANGLE_MESH')
         
         ####################################################################################
         #----------TO BE CHANGED----------.
@@ -120,64 +122,86 @@ class Window(pyglet.window.Window):
         
     #Parses given data file, loads data into self.vertexData as c style array
     #Assumes file structure: X,Y,Z,R,G,B\n
-    def parseData(self, data_file):
+    def parseData(self, data_file, mode = None):
         #stores vertices read in from file (vertices and color interweaved)
         vertices = []
         indices = []
-        #self.vertices = []
-        with open(data_file, 'r') as f:
-            for line in f:
-                vertex = str(line).replace('\n', '').split(',')
-                #Create 4 vertices from single input vertex (create a square)
-                x = float(vertex[0])
-                y = float(vertex[1])
-                z = float(vertex[2])
-                r = float(vertex[3])
-                g = float(vertex[4])
-                b = float(vertex[5])
-                d = 0.5
-                #Add generated vertices from point
-                #top face
-                vertices.append([x - d, y - d, z + d, r, g, b])
-                p0 = len(vertices) - 1
-                vertices.append([x + d, y - d, z + d, r, g, b])
-                p1 = len(vertices) - 1
-                vertices.append([x + d, y + d, z + d, r, g, b])
-                p2 = len(vertices) - 1
-                vertices.append([x - d, y + d, z + d, r, g, b])
-                p3 = len(vertices) - 1
-                #bottom face
-                vertices.append([x - d, y - d, z - d, r, g, b])
-                p4 = len(vertices) - 1
-                vertices.append([x + d, y - d, z - d, r, g, b])
-                p5 = len(vertices) - 1
-                vertices.append([x + d, y + d, z - d, r, g, b])
-                p6 = len(vertices) - 1
-                vertices.append([x - d, y + d, z - d, r, g, b])
-                p7 = len(vertices) - 1
-                #index the geometry (USE WHEN USING TRIANGLES)
-                #FRONT FACE
-                indices.append([p0, p1, p3])
-                indices.append([p2, p3, p1])
-                #BACK FACE
-                indices.append([p4, p5, p7])
-                indices.append([p6, p7, p5])
-                #TOP FACE
-                indices.append([p3, p7, p2])
-                indices.append([p6, p2, p7])
-                #BOTTOM FACE
-                indices.append([p0, p4, p1])
-                indices.append([p5, p1, p4])
-                #RIGHT FACE
-                indices.append([p1, p5, p2])
-                indices.append([p6, p2, p5])
-                #LEFT FACE
-                indices.append([p7, p4, p3])
-                indices.append([p0, p3, p4])
-                #USE WHEN USING POINTS
-#                vertices.append([x, y, z, r, g, b])
-#                indices.append(len(vertices) - 1)
-
+        if (mode == "POINT_CLOUD"):
+            with open(data_file, 'r') as f:
+                for line in f:
+                    vertex = str(line).replace('\n', '').split(',')
+                    #Create 4 vertices from single input vertex (create a square)
+                    x = float(vertex[0])
+                    y = float(vertex[1])
+                    z = float(vertex[2])
+                    r = float(vertex[3])
+                    g = float(vertex[4])
+                    b = float(vertex[5])
+                    d = 0.5
+                    #Add generated vertices from point
+                    #top face
+                    vertices.append([x - d, y - d, z + d, r, g, b])
+                    p0 = len(vertices) - 1
+                    vertices.append([x + d, y - d, z + d, r, g, b])
+                    p1 = len(vertices) - 1
+                    vertices.append([x + d, y + d, z + d, r, g, b])
+                    p2 = len(vertices) - 1
+                    vertices.append([x - d, y + d, z + d, r, g, b])
+                    p3 = len(vertices) - 1
+                    #bottom face
+                    vertices.append([x - d, y - d, z - d, r, g, b])
+                    p4 = len(vertices) - 1
+                    vertices.append([x + d, y - d, z - d, r, g, b])
+                    p5 = len(vertices) - 1
+                    vertices.append([x + d, y + d, z - d, r, g, b])
+                    p6 = len(vertices) - 1
+                    vertices.append([x - d, y + d, z - d, r, g, b])
+                    p7 = len(vertices) - 1
+                    #index the geometry (USE WHEN USING TRIANGLES)
+                    #FRONT FACE
+                    indices.append([p0, p1, p3])
+                    indices.append([p2, p3, p1])
+                    #BACK FACE
+                    indices.append([p4, p5, p7])
+                    indices.append([p6, p7, p5])
+                    #TOP FACE
+                    indices.append([p3, p7, p2])
+                    indices.append([p6, p2, p7])
+                    #BOTTOM FACE
+                    indices.append([p0, p4, p1])
+                    indices.append([p5, p1, p4])
+                    #RIGHT FACE
+                    indices.append([p1, p5, p2])
+                    indices.append([p6, p2, p5])
+                    #LEFT FACE
+                    indices.append([p7, p4, p3])
+                    indices.append([p0, p3, p4])
+                    #USE WHEN USING POINTS
+#                    vertices.append([x, y, z, r, g, b])
+#                    indices.append(len(vertices) - 1)
+        #Requires numpy array of vertices of the form [x][y][z, r, g, b]
+        elif (mode == "TRIANGLE_MESH"):
+            surface_descrip = np.load(data_file)
+            index_ref = []
+            #generate vertices and an index look up table
+            for x in xrange(0, len(surface_descrip)):
+                index_ref.append([])
+                for y in xrange(0, len(surface_descrip[x])):
+                    z = surface_descrip[x][y][0]
+                    r = surface_descrip[x][y][1]
+                    g = surface_descrip[x][y][2]
+                    b = surface_descrip[x][y][3]
+                    vertices.append([x, y, z, r, g, b])
+                    index_ref[x].append(len(vertices) - 1)
+            for x in xrange(0, len(surface_descrip) - 1):
+                for y in xrange(0, len(surface_descrip[x]) - 1):
+                    p1 = index_ref[x][y]
+                    p2 = index_ref[x][y + 1]
+                    p3 = index_ref[x + 1][y + 1]
+                    p4 = index_ref[x + 1][y]
+                    indices.append([p2, p1, p3])
+                    indices.append([p4, p3, p1])
+                           
         #Build vertices array          
         vertices = np.array(vertices).flatten()
         self.vertexData = (GLfloat * vertices.size)()

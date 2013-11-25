@@ -11,12 +11,10 @@ def getZValFromImage(z_case = False, r = None, g = None, b = None):
         return 1
     else:
         return ((r + b + g) * 255)/3.0
-    
 #Extracts vertices from an image and saves it in a file usable by out plotting tool
-def fromImage(file_path, gen_z = False):
+def cloudFromImage(file_path, gen_z = False):
     #Open file using PIL
     img = Image.open(file_path)
-    img.show()
     #Grab pixel data from image and load into numpy array
     img_data = np.asarray(img)
     vertices = ""
@@ -30,13 +28,35 @@ def fromImage(file_path, gen_z = False):
             vertices += str(x) + "," + str(y) + "," + str(z)  + "," + str(r) + "," + str(g) + "," + str(b) + "\n"
     
     out_path = file_path.split('/')[-1].split('.')[0]
-    out_path = "data/" + str(out_path) + ".data"
-    out_file = open(out_path, 'w')
+    out_path = "data/" + str(out_path)
+    out_file = open(str(out_path) + '.data', 'w')
     out_file.write(vertices)
     out_file.close()
+
     
-    image = Image.fromarray(img_data, 'RGB')
-    image.show('Test')
+def surfaceDescriptionFromImage(file_path):
+    #Open file using PIL
+    img = Image.open(file_path)
+    #Grab pixel data from image and load into numpy array
+    img_data = np.asarray(img)
+    surface = []
+    for x in xrange(0, len(img_data)):
+        surface.append([])
+        for y in xrange(0, len(img_data[x])):
+            r = img_data[x][y][0]/255.0
+            g = img_data[x][y][1]/255.0
+            b = img_data[x][y][2]/255.0
+            #generate a z value
+            z = getZValFromImage(True, r, g, b)
+            surface[x].append([z, r, g, b])
+    
+    out_path = file_path.split('/')[-1].split('.')[0]
+    out_path = "data/" + str(out_path)
+    np.save(str(out_path) + '.npy', np.asarray(surface))
+
     
 if __name__ == "__main__":
-    fromImage('images/tommy.jpg', True)
+    img_file = 'images/tommy.jpg'
+    cloudFromImage(img_file, True)
+    surfaceDescriptionFromImage(img_file)
+    
