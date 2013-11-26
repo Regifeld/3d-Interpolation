@@ -55,9 +55,9 @@ class Window(pyglet.window.Window):
         far = 100.0
         #store initial screen values
         #Galaxy values
-        x_max = 220
+        x_max = 200
         x_min = 0
-        y_max = 220
+        y_max = 200
         y_min = 0
         #Tommy values
 #        x_max = 300
@@ -77,11 +77,7 @@ class Window(pyglet.window.Window):
                                           [0, 1, 0, 0], 
                                           [0, 0, 1, 0], 
                                           [0, 0, 0, 1]])
-        
-        #rotate obj locally by 90 degrees
-        self.local_to_world = np.dot(self.translate(x = 220, y = 220, z = 0), self.rot_z(180))
-        #self.local_to_world = np.dot(self.translate(x = 0, y = 220, z = 0), self.rot_z(270))
-        #self.local_to_world = np.dot(self.local_to_world, )
+
         
         #double check this transform
         self.world_to_camera = np.array([[1, 0, 0, 0], 

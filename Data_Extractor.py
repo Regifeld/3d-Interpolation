@@ -52,11 +52,14 @@ def surfaceDescriptionFromImage(file_path):
     
     out_path = file_path.split('/')[-1].split('.')[0]
     out_path = "data/" + str(out_path)
-    np.save(str(out_path) + '.npy', np.asarray(surface))
+    surface = np.asarray(surface) 
+    #gross
+    surface = np.rot90(np.rot90(np.rot90(surface)))
+    np.save(str(out_path) + '.npy', surface)
 
     
 if __name__ == "__main__":
-    img_file = 'images/tommy.jpg'
+    img_file = 'images/tiny_g500.jpg'
     cloudFromImage(img_file, True)
     surfaceDescriptionFromImage(img_file)
     
