@@ -42,9 +42,9 @@ class Window(pyglet.window.Window):
         #Used to store list of vertices from original data file
         self.vertices = None
         #self.parseData('data/tiny_g500.data')
-        #self.parseData('data/tiny_g500.data', mode = 'POINT_CLOUD')
-        #self.parseData('data/tiny_g500.npy', mode = 'TRIANGLE_MESH')
-        self.parseData('data/tommy.npy', mode = 'TRIANGLE_MESH')
+        #self.parseData('data/tiny_g500_scattered.data', mode = 'POINT_CLOUD')
+        self.parseData('data/tiny_g500_interpolated.npy', mode = 'TRIANGLE_MESH')
+        #self.parseData('data/tommy.npy', mode = 'TRIANGLE_MESH')
         
         ####################################################################################
         #----------TO BE CHANGED----------.
@@ -55,21 +55,21 @@ class Window(pyglet.window.Window):
         far = 100.0
         #store initial screen values
         #Galaxy values
-#        x_max = 220
-#        x_min = 0
-#        y_max = 220
-#        y_min = 0
-        #Tommy values
-        x_max = 300
+        x_max = 220
         x_min = 0
-        y_max = 400
+        y_max = 220
         y_min = 0
-        z_max = 255.0 #near
-        z_min = -255.0 #far
+        #Tommy values
+#        x_max = 300
+#        x_min = 0
+#        y_max = 400
+#        y_min = 0
+        z_max = 300.0 #near
+        z_min = -300.0 #far
         #Same as viewer location (p_0)
         e_x = 0
         e_y = 0
-        e_z = 255
+        e_z = 290
         
         
         
@@ -79,7 +79,8 @@ class Window(pyglet.window.Window):
                                           [0, 0, 0, 1]])
         
         #rotate obj locally by 90 degrees
-        self.local_to_world = np.dot(self.translate(x = 0, y = 400, z = 0), self.rot_z(270))
+        self.local_to_world = np.dot(self.translate(x = 220, y = 220, z = 0), self.rot_z(180))
+        #self.local_to_world = np.dot(self.translate(x = 0, y = 220, z = 0), self.rot_z(270))
         #self.local_to_world = np.dot(self.local_to_world, )
         
         #double check this transform
