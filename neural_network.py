@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 class NeuralNetwork():
     #NOTE: FOR THIS PARTICULAR APPLICATION: INPUT LAYER MUST BE 2, OUTPUT LAYER MUST BE 4
     def __init__(self):
-        net_description = [2, 10000, 4]
+        net_description = [2, 5, 4]
         ##################################
         #----------NETWORK INITIALIZATION----------
         #each element in net_descrip describes the # of neurons at that layer
@@ -43,21 +43,22 @@ class NeuralNetwork():
                 self.biases[L].append(2 * self.gen_weight() - 1)
                 self.error_gradients[L].append(0)
     
-    #in the form [x, y, z, r, g, b]           
+    #training examples should be of the form [x, y, z, r, g, b]           
     def train(self, training_set = [], epochs_to_train = 0, learning_rate = 0):
         #----------TRAINING----------
-        epochs = 0    
+        epochs = 0
+        print("Begin Training network") 
         while True:
             # ----- TRAIN -----
             #for each vertex in list of training vertices
             for ex in xrange(0, len(training_set)):        
                 #Load Input
-                x = float(training_set[ex][0])
-                y = float(training_set[ex][1])
+                x = float(training_set[ex][0])/200
+                y = float(training_set[ex][1])/200
                 self.values[0][0] = x
                 self.values[0][1] = y
                 #Load correct output
-                z = float(training_set[ex][2])
+                z = float(training_set[ex][2])/255.0
                 r = float(training_set[ex][3])
                 g = float(training_set[ex][4])
                 b = float(training_set[ex][5])
@@ -84,7 +85,7 @@ class NeuralNetwork():
                     Y_N = self.values[-1][Y]
                     err_grad = Y_N * (1 - Y_N) * errors[Y]
                     self.error_gradients[-1][Y] = err_grad
-                    self.biases[-1][Y] += self.learning_rate * (-1) * err_grad
+                    self.biases[-1][Y] += learning_rate * (-1) * err_grad
                 # - calculate error gradients for hidden layers POTENTIAL POINT OF FAILURE
                 for L in xrange(len(self.net_descrip) - 2, 0, -1):
                     for N in xrange(0, self.net_descrip[L]):
@@ -108,20 +109,24 @@ class NeuralNetwork():
                     self.weights[W] += DW_PN
                     
             epochs += 1
+            print(epochs)
             if (epochs >= epochs_to_train):
                 break
-          
         print("====================================")
         print("Epochs Trained: " + str(epochs))
         print("Weights: " + str(self.weights))
         print("Biases: " + str(self.biases))
         print("====================================")
     
+    #Add load weights functionality
+    def load_weights(self):
+        pass
+    
     #calculates [z, r, g, b] based on given x, y   
     def calculate(self, x, y):
         #Load Input
-        self.values[0][0] = x
-        self.values[0][1] = y    
+        self.values[0][0] = x/200.0
+        self.values[0][1] = y/200.0    
         #---Forward Pass---
         # - Update hidden layer and output layer values
         for L in xrange(1, len(self.net_descrip)):
@@ -133,10 +138,11 @@ class NeuralNetwork():
                     Y_N += self.values[L - 1][I] * self.weights[weight_name]
                 Y_N = self.sigmoid(Y_N - self.biases[L][N])
                 self.values[L][N] = self.correct(Y_N)
-        print("=====================")
-        print("Input: " + str([x,y]))
-        print("Output: " + str(self.values[-1]))
-        output = self.values[-1]
+        z = self.values[-1][0] * 255.0
+        r = self.values[-1][1]
+        g = self.values[-1][2]
+        b = self.values[-1][3]
+        output = [z, r, g, b]
         return output
     
         

@@ -5,6 +5,7 @@ Created on Nov 22, 2013
 '''
 from PIL import Image
 import numpy as np
+import math
 
 def getZValFromImage(z_case = False, r = None, g = None, b = None):
     if (z_case == False):
@@ -57,9 +58,28 @@ def surfaceDescriptionFromImage(file_path):
     surface = np.rot90(np.rot90(np.rot90(surface)))
     np.save(str(out_path) + '.npy', surface)
 
+#create a surface description from z(x, y) = sin(x)cos(y)
+def surfaceDescriptionFromFunction(grid_size = 200):
+    surface = []
+    for x in xrange(0, grid_size):
+        surface.append([])
+        for y in xrange(0, grid_size):
+            f = math.sin(x) * math.cos(y)
+            c = math.sin(f)
+            r = abs(c)
+            b = abs(c)
+            g = abs(c)
+            z = abs(f) * 255.0
+            surface[x].append([z, r, g, b])
+    out_path = "function"
+    out_path = "data/" + str(out_path)
+    surface = np.asarray(surface)
+    print(surface)
+    np.save(str(out_path) + '.npy', surface)
     
 if __name__ == "__main__":
-    img_file = 'images/tiny_g500.jpg'
-    cloudFromImage(img_file, True)
-    surfaceDescriptionFromImage(img_file)
+#    img_file = 'images/tiny_g500.jpg'
+#    cloudFromImage(img_file, True)
+#    surfaceDescriptionFromImage(img_file)
+    surfaceDescriptionFromFunction(200)
     

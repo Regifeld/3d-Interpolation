@@ -41,9 +41,9 @@ class Window(pyglet.window.Window):
         self.numIndices = 0
         #Used to store list of vertices from original data file
         self.vertices = None
-        #self.parseData('data/tiny_g500.data')
+        #self.parseData('data/function.npy')
         #self.parseData('data/tiny_g500_scattered.data', mode = 'POINT_CLOUD')
-        self.parseData('data/tiny_g500_interpolated.npy', mode = 'TRIANGLE_MESH')
+        self.parseData('data/tiny_g500_nn_interpolated.npy', mode = 'TRIANGLE_MESH')
         #self.parseData('data/tommy.npy', mode = 'TRIANGLE_MESH')
         
         ####################################################################################

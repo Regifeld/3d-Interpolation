@@ -7,6 +7,7 @@ import numpy as np
 from scipy.interpolate import Rbf
 import matplotlib.pyplot as plt
 from matplotlib import cm
+from neural_network import *
 
 
 def rbf_interpolation(data_file, grid_size = 200):
@@ -78,9 +79,38 @@ def rbf_interpolation(data_file, grid_size = 200):
     #plt.colorbar()
     #plt.show()
     
-def neural_network_interpolation(data_file):
-    pass
-
+def neural_network_interpolation(data_file, grid_size = 200):
+    vertices = []
+    with open(data_file, 'r') as f:
+        for line in f:
+            vertex = str(line).replace('\n', '').split(',')
+            x = float(vertex[0])
+            y = float(vertex[1])
+            z = float(vertex[2])
+            r = float(vertex[3])
+            g = float(vertex[4])
+            b = float(vertex[5])
+            vertices.append([x, y, z, r, g, b])
+    #initialize neural network
+    network = NeuralNetwork()
+    #train the neural network
+    network.train(vertices, 1000, 0.1)
+    surface = []
+    #interpolate the grid using trained network
+    for i in xrange(0, grid_size):
+        surface.append([])
+        for j in xrange(0, grid_size):
+            output = network.calculate(x = i, y = j)
+            surface[i].append(output)
+            
+    out_path = data_file.split('/')[-1].split('.')[0]
+    out_path = out_path.replace('_scattered', '')
+    out_path = "data/" + str(out_path)
+    surface = np.asarray(surface)
+    surface = np.rot90(np.rot90(np.rot90(surface)))
+    #Write out the numpy surface description
+    np.save(str(out_path) + '_nn_interpolated.npy', surface)
+    
 #this function takes specified number of samples from given data file and writes the scattered data to a new file
 #if samples is too high(7000 is about 10-12gb on my system), memory error will occur!
 #samples must be lower than the number of vertices in the original data set!
@@ -130,7 +160,9 @@ def scatter_data(data_file, samples = 0):
 if __name__ == "__main__":
     data_file ="data/tiny_g500.data"
     #scatter_data(data_file, 7000)
-    rbf_interpolation("data/tiny_g500_scattered.data")
+    #rbf_interpolation("data/tiny_g500_scattered.data", 200)
+    neural_network_interpolation("data/tiny_g500_scattered.data", 200)
+    
 
 
 
