@@ -41,10 +41,10 @@ class Window(pyglet.window.Window):
         self.numIndices = 0
         #Used to store list of vertices from original data file
         self.vertices = None
-        #self.parseData('data/function.npy')
+        #self.parseData('data/function_rbf_interpolated.npy', mode = 'TRIANGLE_MESH')
         #self.parseData('data/tiny_g500_scattered.data', mode = 'POINT_CLOUD')
-        self.parseData('data/tiny_g500_nn_interpolated.npy', mode = 'TRIANGLE_MESH')
-        #self.parseData('data/tommy.npy', mode = 'TRIANGLE_MESH')
+        #self.parseData('data/tiny_g500_rbf_interpolated.npy', mode = 'TRIANGLE_MESH')
+        self.parseData('data/terrain_rbf_interpolated.npy', mode = 'TRIANGLE_MESH')
         
         ####################################################################################
         #----------TO BE CHANGED----------.
@@ -55,15 +55,15 @@ class Window(pyglet.window.Window):
         far = 100.0
         #store initial screen values
         #Galaxy values
+#        x_max = 200
+#        x_min = 0
+#        y_max = 200
+#        y_min = 0
+        #Tommy values
         x_max = 200
         x_min = 0
         y_max = 200
         y_min = 0
-        #Tommy values
-#        x_max = 300
-#        x_min = 0
-#        y_max = 400
-#        y_min = 0
         z_max = 300.0 #near
         z_min = -300.0 #far
         #Same as viewer location (p_0)
@@ -71,13 +71,10 @@ class Window(pyglet.window.Window):
         e_y = 0
         e_z = 290
         
-        
-        
         self.local_to_world = np.array([[1, 0, 0, 0], 
                                           [0, 1, 0, 0], 
                                           [0, 0, 1, 0], 
                                           [0, 0, 0, 1]])
-
         
         #double check this transform
         self.world_to_camera = np.array([[1, 0, 0, 0], 
@@ -95,10 +92,6 @@ class Window(pyglet.window.Window):
                                  [0, 2/(y_max - y_min), 0, -(y_max + y_min)/(y_max - y_min)],
                                  [0, 0, -2/(z_min - z_max), -(z_min + z_max)/(z_min - z_max)], 
                                  [0, 0, 0, 1]])
-#        self.p_ortho = np.array([[far/self.aspect, 0, 0, 0],
-#                               [0, far, 0, 0],
-#                               [0, 0, (far + near)/(near - far), (2*far*near)/(near - far)],
-#                               [0, 0, -1, 0]])
                 
 
         

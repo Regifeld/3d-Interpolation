@@ -10,7 +10,7 @@ from matplotlib import cm
 from neural_network import *
 
 
-def rbf_interpolation(data_file, grid_size = 200):
+def rbf_interpolation(data_file, grid_x = 200, grid_y = 200):
     ##############################################
     #scipy interpolator (Radial basis function)
     with open(data_file, 'r') as f:
@@ -36,9 +36,11 @@ def rbf_interpolation(data_file, grid_size = 200):
     b = np.asarray(b)
     print("Interpolating")
     #want to interpolate scattered data into mesh grid of size max_x by max_y
-    GRID_W = grid_size
-    ti = np.linspace(0, GRID_W - 1, GRID_W)
-    XI, YI = np.meshgrid(ti, ti)
+    GRID_X = grid_x
+    GRID_Y = grid_y
+    tx = np.linspace(0, GRID_X - 1, GRID_X)
+    ty = np.linspace(0, GRID_Y - 1, GRID_Y)
+    XI, YI = np.meshgrid(tx, ty)
     #INTERPOLATE VALUES
     rbf = Rbf(x, y, z, epsilon = 2)
     ZI = rbf(XI, YI)
@@ -50,9 +52,9 @@ def rbf_interpolation(data_file, grid_size = 200):
     BI = rbf(XI, YI)
     print("Writing results to file")
     data = []
-    for xi in xrange(0, GRID_W):
+    for xi in xrange(0, GRID_X):
         data.append([])
-        for yi in xrange(0, GRID_W):
+        for yi in xrange(0, GRID_Y):
             z_val = ZI[xi][yi]
             r_val = RI[xi][yi]
             g_val = GI[xi][yi]
@@ -158,10 +160,10 @@ def scatter_data(data_file, samples = 0):
     out_file.close()
     
 if __name__ == "__main__":
-    data_file ="data/tiny_g500.data"
+    data_file ="data/terrain.data"
     #scatter_data(data_file, 7000)
-    #rbf_interpolation("data/tiny_g500_scattered.data", 200)
-    neural_network_interpolation("data/tiny_g500_scattered.data", 200)
+    rbf_interpolation("data/terrain_scattered.data", 200, 200)
+    #neural_network_interpolation("data/tiny_g500_scattered.data", 200)
     
 
 
