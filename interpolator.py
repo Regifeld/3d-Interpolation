@@ -67,10 +67,10 @@ def rbf_interpolation(data_file, grid_x = 200, grid_y = 200):
     out_path = "data/" + str(out_path)
     data = np.asarray(data)
     data = np.fliplr(data)
+    data = np.rot90(data)
     #Write out the numpy surface description
     np.save(str(out_path) + '_rbf_interpolated.npy', data)
     print("DONE")
-    
     #n = plt.normalize(0., 200)
     #plt.subplot(1, 1, 1)
     #plt.pcolor(XI, YI, ZI)
@@ -109,61 +109,99 @@ def neural_network_interpolation(data_file, grid_size = 200):
     out_path = out_path.replace('_scattered', '')
     out_path = "data/" + str(out_path)
     surface = np.asarray(surface)
-    surface = np.rot90(np.rot90(np.rot90(surface)))
     #Write out the numpy surface description
     np.save(str(out_path) + '_nn_interpolated.npy', surface)
     
-#this function takes specified number of samples from given data file and writes the scattered data to a new file
-#if samples is too high(7000 is about 10-12gb on my system), memory error will occur!
-#samples must be lower than the number of vertices in the original data set!
-def scatter_data(data_file, samples = 0):
-    vertices = []
+def shepards_interpolation(data_file, grid_x = 200, grid_y = 200, power = 5):
+    GRID_X = grid_x
+    GRID_Y = grid_y
+    #Parse data file and build x, y, z, r, g, b np arrays  
     with open(data_file, 'r') as f:
+        x = []
+        y = []
+        z = []
+        r = []
+        g = []
+        b = []
         for line in f:
             vertex = str(line).replace('\n', '').split(',')
-            x = float(vertex[0])
-            y = float(vertex[1])
-            z = float(vertex[2])
-            r = float(vertex[3])
-            g = float(vertex[4])
-            b = float(vertex[5])
-            vertices.append([x, y, z, r, g, b])
-            
-    vertices = np.asarray(vertices)
-    #scatter data
-    np.random.shuffle(vertices)
-    NUM_POINTS = samples
-    x = vertices[:NUM_POINTS, 0]
-    y = vertices[:NUM_POINTS, 1]
-    z = vertices[:NUM_POINTS, 2]
-    r = vertices[:NUM_POINTS, 3]
-    g = vertices[:NUM_POINTS, 4]
-    b = vertices[:NUM_POINTS, 5]
-    print("Building point cloud of scattered data")
-    #build point cloud of scattered data
-    vertices_str = ""
-    for p in xrange(0, NUM_POINTS):
-        x_val = x[p]
-        y_val = y[p]
-        z_val = z[p]
-        r_val = r[p]
-        g_val = g[p]
-        b_val = b[p]
-        #generate point cloud from broken image
-        vertices_str += str(x_val) + "," + str(y_val) + "," + str(z_val)  + "," + str(r_val) + "," + str(g_val) + "," + str(b_val) + "\n"
-        
+            x.append(float(vertex[0]))
+            y.append(float(vertex[1]))
+            z.append(float(vertex[2]))
+            r.append(float(vertex[3]))
+            g.append(float(vertex[4]))
+            b.append(float(vertex[5]))
+    x = np.asarray(x)
+    y = np.asarray(y)
+    z = np.asarray(z)
+    r = np.asarray(r)
+    g = np.asarray(g)
+    b = np.asarray(b)
+    
+    #import pdb; pdb.set_trace()
+    
+    #want to interpolate scattered data into mesh grid of size max_x by max_y
+    #Initialize grid
+    surface = np.zeros((GRID_X, GRID_Y, 4))
+    for xi in xrange(0, GRID_X):
+        for yi in xrange(0, GRID_Y):
+            idx = np.logical_and(x == xi, y == yi)
+            if np.any(idx):            
+                surface[xi, yi, 0] = z[idx][0]
+                surface[xi, yi, 1] = r[idx][0]
+                surface[xi, yi, 2] = g[idx][0]
+                surface[xi, yi, 3] = b[idx][0]
+            else:
+                #Calculate distance from current point to all other points in the cloud
+                dist = ((xi - x)**2 + (yi - y)**2)**0.5
+                #Calculate the weights
+                w = 1.0/(dist**power)
+                #Calculate interpolated value(z, r, g, b) for current grid cell
+                #Z        
+                u = np.sum( (w*z)/w.sum() )              
+                surface[xi,yi,0] = u      
+                #r
+                u = np.sum((w*r)/w.sum())
+                surface[xi,yi,1] = u
+                #g
+                u = np.sum((w*g)/w.sum())
+                surface[xi,yi,2] = u
+                #b
+                u = np.sum((w*b)/w.sum())
+                surface[xi,yi,3] = u        
+    
     out_path = data_file.split('/')[-1].split('.')[0]
     out_path = "data/" + str(out_path)
-    #Write out the point cloud
-    out_file = open(str(out_path) + '_scattered.data', 'w')
-    out_file.write(vertices_str)
-    out_file.close()
+    out_path = out_path.replace("_scattered", "")
+    #Write out the numpy surface description
+    np.save(str(out_path) + '_shepard_interpolated.npy', surface)
+
     
 if __name__ == "__main__":
-    data_file ="data/terrain.data"
-    #scatter_data(data_file, 7000)
-    rbf_interpolation("data/terrain_scattered.data", 200, 200)
-    #neural_network_interpolation("data/tiny_g500_scattered.data", 200)
+    data_file = raw_input("Data file to interpolate: ")
+    #make sure the file is solid (mostly)
+    try:
+        f = open(data_file)
+        if (data_file.split('.')[-1] != 'data'):
+            print("Invalid file type!")
+            exit(1)
+    except:
+        print("Invalid file path!")
+        exit(1)
+    else:
+        f.close()
+    #Give the options
+    print("Select an interpolation mode (1, 2, 3)")
+    print("1: rbf\n2: neural network (you really don't want to do this)\n3: Shepard's")
+    mode = raw_input("mode: ")
+    if (mode == '1'):
+        rbf_interpolation(data_file , 200, 200)
+    elif (mode == '2'):
+        neural_network_interpolation(data_file, 200)
+    elif (mode == '3'):
+        shepards_interpolation("data/terrain_scattered.data", 200, 200, 5)
+    else:
+        print("Invalid selection")
     
 
 

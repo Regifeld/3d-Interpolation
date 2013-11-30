@@ -23,6 +23,16 @@ import math
 class Window(pyglet.window.Window):
 
     def __init__(self):
+        #grab file to be rendered
+        parse_file = raw_input("Enter data file to be rendered: ")
+        if (parse_file.split('.')[-1] == 'npy'):
+            mode = 'TRIANGLE_MESH'
+        elif (parse_file.split('.')[-1] == 'data'):
+            mode = 'POINT_CLOUD'
+        else:
+            print("Invalid file extension!")
+            exit(1)
+        
         # Create an OpenGL 3.2 context; initialize with that
         config = pyglet.gl.Config(double_buffer = True, 
                                   depth_size = 24, 
@@ -41,11 +51,13 @@ class Window(pyglet.window.Window):
         self.numIndices = 0
         #Used to store list of vertices from original data file
         self.vertices = None
-        #self.parseData('data/function_rbf_interpolated.npy', mode = 'TRIANGLE_MESH')
-        #self.parseData('data/tiny_g500_scattered.data', mode = 'POINT_CLOUD')
-        #self.parseData('data/tiny_g500_rbf_interpolated.npy', mode = 'TRIANGLE_MESH')
-        self.parseData('data/terrain_rbf_interpolated.npy', mode = 'TRIANGLE_MESH')
         
+        #Get data file and mapping mode
+        try:
+            self.parseData(parse_file, mode)
+        except:
+            print("Could not parse file!")
+            exit(1)
         ####################################################################################
         #----------TO BE CHANGED----------.
         self.screen_width = 600.0
@@ -54,12 +66,6 @@ class Window(pyglet.window.Window):
         near = 0.1
         far = 100.0
         #store initial screen values
-        #Galaxy values
-#        x_max = 200
-#        x_min = 0
-#        y_max = 200
-#        y_min = 0
-        #Tommy values
         x_max = 200
         x_min = 0
         y_max = 200
