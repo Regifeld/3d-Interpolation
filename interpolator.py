@@ -96,7 +96,7 @@ def neural_network_interpolation(data_file, grid_size = 200):
     #initialize neural network
     network = NeuralNetwork()
     #train the neural network
-    network.train(vertices, 1000, 0.1)
+    network.train(vertices, 2000, 0.25)
     surface = []
     #interpolate the grid using trained network
     for i in xrange(0, grid_size):
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     elif (mode == '2'):
         neural_network_interpolation(data_file, 200)
     elif (mode == '3'):
-        shepards_interpolation("data/terrain_scattered.data", 200, 200, 5)
+        shepards_interpolation(data_file, 200, 200, 3)
     else:
         print("Invalid selection")
     

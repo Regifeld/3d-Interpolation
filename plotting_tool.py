@@ -105,6 +105,14 @@ class Window(pyglet.window.Window):
                                    [0, 1, 0, 0],
                                    [0, 0, 1, 0], 
                                    [0, 0, 0, 1]])
+        self.cam = np.array([[1, 0, 0, 0],
+                             [0, 1, 0, 0],
+                             [0, 0, 1, 0], 
+                             [0, 0, 0, 1]])
+        self.eye = np.array([[1, 0, 0, 0],
+                             [0, 1, 0, 0],
+                             [0, 0, 1, 0], 
+                             [0, 0, 0, 1]])
         ####################################################################################
            
         # Initialize GL state: Enable depth testing
@@ -348,13 +356,14 @@ class Window(pyglet.window.Window):
     def on_draw(self):
         # Handles glClear calls
         self.clear()
-        #BUILD MV Matrix
-        mvMatrix = np.dot(self.local_to_world, self.transform)
-        mvMatrix = np.dot(self.world_to_camera, mvMatrix)
+        #BUILD MV Matrix - LOCAL WORKS
+#         mvMatrix = np.dot(self.local_to_world, self.transform)
+#         mvMatrix = np.dot(self.world_to_camera, mvMatrix)
+#         mvMatrix = np.dot(self.eye_transform, mvMatrix)
+        #EXPERIMENTAL
+        mvMatrix = np.dot(self.world_to_camera, self.local_to_world)
         mvMatrix = np.dot(self.eye_transform, mvMatrix)
-#        mvMatrix = np.dot(self.world_to_camera, self.local_to_world)
-#        mvMatrix = np.dot(self.eye_transform, mvMatrix)
-#        mvMatrix = np.dot(self.transform, mvMatrix)        
+        mvMatrix = np.dot(self.transform, mvMatrix)        
         
         #apply ortho perspective matrix to model view matrix
         mvpMatrix = np.dot(self.p_ortho, mvMatrix)
@@ -432,6 +441,14 @@ class Window(pyglet.window.Window):
                               [0, 0, s, 0], 
                               [0, 0, 0, 1]])
             self.transform = np.dot(self.transform, scale)
+        elif keycode == key.N:
+            #scale back
+            s = 0.9
+            scale = np.array([[s, 0, 0, 0], 
+                              [0, s, 0, 0],
+                              [0, 0, s, 0], 
+                              [0, 0, 0, 1]])            
+            self.transform = np.dot(self.transform, scale)
         elif keycode == key.Y:
             x = 1
             z = 1
@@ -458,9 +475,19 @@ class Window(pyglet.window.Window):
             self.transform = np.dot(self.transform, shear)
         # Always redraw after keypress
         elif keycode == key.W:
-            #rotate about local x axis
+            #Move camera forward
             self.transform = np.dot(self.transform, self.translate(0, 0, 10))
-            
+        elif keycode == key.S:
+            #move world back
+            self.transform = np.dot(self.transform, self.translate(0, 0, -10))
+        elif keycode == key.A:
+            self.transform = np.dot(self.transform, self.translate(-10, 0, 0))
+        elif keycode == key.D:
+            self.transform = np.dot(self.transform, self.translate(10, 0, 0))
+        elif keycode == key.EQUAL:
+            self.transform = np.dot(self.transform, self.translate(0, 10, 0))
+        elif keycode == key.MINUS:
+            self.transform = np.dot(self.transform, self.translate(0, -10, 0))
         self.on_draw()
     
 # Run the actual application
